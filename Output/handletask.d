@@ -2,7 +2,7 @@
 ..\output\handletask.o: ..\User\HandleTask.h
 ..\output\handletask.o: ..\CMSIS\CM3\DeviceSupport\ST\STM32F10x\stm32f10x.h
 ..\output\handletask.o: ..\CMSIS\CM3\CoreSupport\core_cm3.h
-..\output\handletask.o: D:\Keil_v512\ARM\ARMCC\Bin\..\include\stdint.h
+..\output\handletask.o: f:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
 ..\output\handletask.o: ..\CMSIS\CM3\DeviceSupport\ST\STM32F10x\system_stm32f10x.h
 ..\output\handletask.o: ..\User\stm32f10x_conf.h
 ..\output\handletask.o: ..\Libraries\inc\stm32f10x_adc.h
@@ -30,7 +30,7 @@
 ..\output\handletask.o: ..\Libraries\inc\stm32f10x_wwdg.h
 ..\output\handletask.o: ..\Libraries\inc\misc.h
 ..\output\handletask.o: ..\User\systemclock.h
-..\output\handletask.o: D:\Keil_v512\ARM\ARMCC\Bin\..\include\string.h
+..\output\handletask.o: f:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
 ..\output\handletask.o: ..\User\inc\DataFlash.h
 ..\output\handletask.o: ..\User\inc\Stm32_Configuration.h
 ..\output\handletask.o: ..\User\si4463.h
