@@ -36,3 +36,4 @@
 ..\output\handletask.o: ..\User\si4463.h
 ..\output\handletask.o: ..\User\radio_config_si4463.h
 ..\output\handletask.o: ..\User\si446x_defs.h
+..\output\handletask.o: ..\User\inc\myPID.h

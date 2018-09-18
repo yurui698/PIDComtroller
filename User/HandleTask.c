@@ -7,6 +7,7 @@ SWD½Ó¿Ú:SWCLK---PA14,SWDIO---PA13,NRST---NRST;TTL´®¿Ú1£ºTXD1---PA9£¬RXD1---PA10£
 #include "DataFlash.h"
 #include "Stm32_Configuration.h"
 #include "si4463.h"
+#include "myPID.h"
 
 /*Modbus×ÓÕ¾ID*/
 #define SLAVE_ID                 0x01
@@ -202,6 +203,9 @@ static u8  evt_sensor_data;
 static u8  evt_check_eachevt;																		
 static u8  evt_wx_cmd=0;	
 
+/*##########################*/
+vs8 t_motor = 10;
+/*##########################*/
 void Period_Events_Handle(u32 Events)
 {
 	if(Events&SYS_INIT_EVT)
@@ -234,12 +238,22 @@ void Period_Events_Handle(u32 Events)
 	}
 
   YX_LED_TOGGLE;	
-	if(Events&IO_CTRL_CMD_EVT)
-	{
-		IO_ctrl_cmd();
-		Start_timerEx( IO_CTRL_CMD_EVT,100 );
-	}
+//	if(Events&IO_CTRL_CMD_EVT)
+//	{
+//		IO_ctrl_cmd();
+//		Start_timerEx( IO_CTRL_CMD_EVT,100 );
+//	}
+/*PID¿ØÖÆ######################################*/
+	vPID mypid;
+	PID_init(&mypid,100,0,50);
 
+	if(Events& PID_CTRL_CMD_EVT)
+	{
+		t_motor = PIDRegulator(&mypid,20.00);
+		motor_ctrl(t_motor);
+		Start_timerEx( PID_CTRL_CMD_EVT,t_motor );
+	}
+	/*PID¿ØÖÆ######################################*/
 	if(Events&SENSOR_DATA_EVT)
 	{
 		evt_sensor_data=0;
