@@ -411,5 +411,6 @@ void SYS_Confgiuration(void)
   	SysTick->CTRL  = 0x05;
 
 	TimerInit();
+	
 	Start_timerEx(SYS_INIT_EVT,5000);
 }

@@ -1,27 +1,6 @@
 #include <math.h>
 #include <stdio.h>
-typedef struct {
-  float maximum;               /*输出值上限*/
-  float minimum;                /*输出值下限*/
-
-  float setpoint;                /*设定值*/
-  float kp;                      /*比例系数*/
-  float ki;                     /*积分系数*/
-  float kd;              
-
-  float lasterror;              /*前一拍偏差*/
-  float preerror;               /*前两拍偏差*/
-  float result;                /*PID控制器结果*/
-  float output;                 /*输出值*/
- float deltadiff;
- float alpha;
-  float errorabsmax;
-  float errorabsmin;
-  float deadband;               /*死区*/
-  float integralValue;
-}vPID;
-float pv;
-float VariableIntegralCoefficient(float error,float absmax,float absmin);
+#include "myPID.h"
 
 
 /*PID初始化函数*/
@@ -34,50 +13,46 @@ void PID_init(vPID *mypid, float vMin, float vMax, float sp)
 	mypid->setpoint = sp;                 /*设定值*/
 	mypid->kp = 0.3;                      /*比例系数*/
 	mypid->ki = 0.35;                     /*积分系数*/
-	mypid->kd = 0.01; 
+
 	mypid->lasterror = 0.0;              /*前一拍偏差*/
-	mypid->preerror = 0.0;               /*前两拍偏差*/
+              
 	mypid->result = vMin;                /*PID控制器结果*/
-	mypid->output = 0.0;                 /*输出值*/
 
-	mypid->errorabsmax = (vMax - vMin)*0.8;
-	mypid->errorabsmin = (vMax - vMin)*0.2;
 
-	mypid->deadband = (vMax - vMin)*0.005;               /*死区*/
-	mypid->alpha=0.2;                  /*不完全微分系数*/
- 	 mypid->deltadiff=0.0;
-	mypid->integralValue = 0.0;
+	mypid->errorabsmax = (vMax - vMin)*0.8f;
+	mypid->errorabsmin = (vMax - vMin)*0.2f;
+
+	mypid->deadband = (vMax - vMin)*0.005f;               /*死区*/
+	               
+ 		
 }
 
-int PIDRegulator(vPID *mypid,float processvalue) //pv为processvalue 实际测量值
+void PIDRegulator(vPID *mypid,float processvalue) //pv为processvalue 实际测量值
 {
   float thisError;
   float result;
   float increment;
   float pError,iError,dError;
   float factor;
-  int  index = 1;
+	processvalue *= 7.5f; //频率转换流量
+  u8  index = 1;
   thisError=mypid->setpoint-processvalue; //得到偏差值
-   printf("mypid->setpoint = %f\n",mypid->setpoint);
-    printf("processvalue = %f\n",processvalue);
-  printf("thisError = %f\n",thisError);
+ 
   result=mypid->result;
   factor=VariableIntegralCoefficient(thisError,mypid->errorabsmax,mypid->errorabsmin);
   
-  if (fabs(thisError)>mypid->deadband)
+  if (fabs(thisError)>mypid->deadband) //误差大于死区
   {
-    pError=thisError-mypid->lasterror;
-    iError=thisError;
-    printf("pError = %f\n",pError);
-    printf("iError = %f\n",iError);
-   dError=thisError-2*(mypid->lasterror)+mypid->preerror;
-   mypid->deltadiff= mypid->kd*(1-mypid->alpha)*dError+mypid->alpha*mypid->deltadiff;
-   printf("mypid->deltadiff = %f\n",mypid->deltadiff);
-    increment=mypid->kp*pError+mypid->ki*factor*iError+mypid->deltadiff;//增量计算,去除kd
+    pError=thisError-mypid->lasterror; //比例误差
+    iError=thisError;		                //积分误差
+    
+    
+  
+    increment=mypid->kp*pError+mypid->ki*factor*iError;//增量计算,去除kd
   }
   else
   {
-    if((fabs(mypid->setpoint-mypid->minimum)<mypid->deadband)&&(fabs(processvalue-mypid->minimum)<mypid->deadband))
+    if((fabs(mypid->setpoint-mypid->minimum)<mypid->deadband)&&(fabs(processvalue-mypid->minimum)<mypid->deadband)) //当实际值接近最小值且设定值在死区内,最小输出
     {
       result=mypid->minimum;
     }
@@ -97,13 +72,14 @@ int PIDRegulator(vPID *mypid,float processvalue) //pv为processvalue 实际测�
   } 
 
     //存放偏差用于下次运算
+	
   mypid->lasterror=thisError;
   mypid->result=result;
-  pv = result;
-  printf("result = %f\n",mypid->result);
-  printf("increment = %f\n",increment);
-
-	return 0;    //电机开转时间,单位s,thisError为正则正转,阀门开大,否则反转
+ //流量增量和阀门开度换算
+ 
+	
+//	motor_ctrl(t_motor);
+	
 }
 float VariableIntegralCoefficient(float error,float absmax,float absmin)
 {
@@ -125,18 +101,39 @@ float VariableIntegralCoefficient(float error,float absmax,float absmin)
   return factor;
 }
 
-int main(int argc, char const *argv[])
+void motor_ctrl(u8 t_motor)
 {
-	int i = 0;
-	int t = 0;
-	vPID mypid;
-	PID_init(&mypid, 0, 100, 70);
-	for (i = 0; i < 100; i++)
+//	if(t_motor > 0)
+//	{
+//		motorflg = 1;
+//	}else if(t_motor < 0)
+//	{
+//		motorflg = 2;
+//	}
+//	
+//	Start_timerEx( MOTOR_CTR_EVT,t_motor );
+//	
+}
+void PIDTest(u16 setpoint,u16 processvalue)
+{
+	vs16 error = 0;
+	error = setpoint - processvalue;
+	/*控制正反转*/
+	if(error > 0){motorflg = 1;}        
+  else if(error < 0){motorflg = 2;}
+	else {motorflg = 0;}
+	
+	/*控制转速*/
+	if(abs(error) > (u16)(processvalue)/2)  //快速
 	{
-		printf("第%d次PID\n", i);
-		t = PIDRegulator(&mypid, pv);
-		printf("t = %d\n", t);
-		printf("\n");
+		t_on =  t_speed[0];
 	}
-	return 0;
+	if( (abs(error) < (u16)(processvalue)/2) && (abs(error) > (u16)(processvalue)/8) )  //中速
+	{
+		t_on =  t_speed[1];
+	}
+	else{t_on =  t_speed[2];}   //慢速
+	
+		t_off = 1000 - t_on;
+	
 }

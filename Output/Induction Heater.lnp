@@ -26,6 +26,6 @@
 "..\output\si4463.o"
 "..\output\mypid.o"
 --library_type=microlib --strict --scatter "..\Output\Induction Heater.sct"
---summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
+--summary_stderr --info summarysizes --map --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers
 --list "..\Listing\Induction Heater.map" -o "..\Output\Induction Heater.axf"

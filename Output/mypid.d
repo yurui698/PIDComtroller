@@ -1,4 +1,6 @@
 ..\output\mypid.o: ..\User\myPID.c
+..\output\mypid.o: f:\Keil_v5\ARM\ARMCC\Bin\..\include\math.h
+..\output\mypid.o: f:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
 ..\output\mypid.o: ..\User\inc\myPID.h
 ..\output\mypid.o: ..\CMSIS\CM3\DeviceSupport\ST\STM32F10x\stm32f10x.h
 ..\output\mypid.o: ..\CMSIS\CM3\CoreSupport\core_cm3.h
@@ -29,4 +31,4 @@
 ..\output\mypid.o: ..\Libraries\inc\stm32f10x_usart.h
 ..\output\mypid.o: ..\Libraries\inc\stm32f10x_wwdg.h
 ..\output\mypid.o: ..\Libraries\inc\misc.h
-..\output\mypid.o: f:\Keil_v5\ARM\ARMCC\Bin\..\include\math.h
+..\output\mypid.o: ..\User\systemclock.h

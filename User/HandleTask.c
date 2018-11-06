@@ -203,11 +203,26 @@ static u8  evt_sensor_data;
 static u8  evt_check_eachevt;																		
 static u8  evt_wx_cmd=0;	
 
-/*##########################*/
-vs8 t_motor = 10;
-/*##########################*/
+
+/*########################################################*/
+//vs8 t_motor = 0; //vs8 有符号
+__attribute__((section("NO_INIT"),zero_init))  u16 PID_ControlValue[3];//[0][1][2]三路频率
+float PIDPara[9] = {0}; //[0]流量1设定值,[1]流量2设定值[2]流量3设定值 [3]Kd1,[4]Kd2,[5]Kd3,[6]Ki1,[7]Ki2,[8]Ki3
+u16 t_on,t_off;
+u16 t_speed[3] = {200,50,20};  //定义三种速度
+u8 i_test=0;
+u8 motorflg;
+float setQ = 15;   //设定流量 min/L float
+u16 setpoint;      //设定流量转换为频率 u16
+u16 pv[20]={10,15,20,35,40,50,60,70,80,85,90,95,100,120,111,160,160,160,160,160};
+
+/*#######################################################*/
 void Period_Events_Handle(u32 Events)
-{
+{ 
+	
+	setpoint = 7.5*setQ;  //112
+	
+//	vPID mypid;
 	if(Events&SYS_INIT_EVT)
 	{
 		RXENABLE2;
@@ -235,25 +250,68 @@ void Period_Events_Handle(u32 Events)
 		Start_timerEx(SENSOR_DATA_EVT,2000);		  		
 		Start_timerEx(IO_CTRL_CMD_EVT,1000);
 		Start_timerEx(CHECK_EACHEVT_EVT,10000);	
+	
+		
+		Start_timerEx( PID_CTRL_CMD_EVT,2400);
+		Start_timerEx( MOTOR_ON_EVT,2400);
 	}
 
   YX_LED_TOGGLE;	
-//	if(Events&IO_CTRL_CMD_EVT)
-//	{
-//		IO_ctrl_cmd();
-//		Start_timerEx( IO_CTRL_CMD_EVT,100 );
-//	}
-/*PID控制######################################*/
-	vPID mypid;
-	PID_init(&mypid,100,0,50);
+	if(Events&IO_CTRL_CMD_EVT)
+	{
+		IO_ctrl_cmd();
+		Start_timerEx( IO_CTRL_CMD_EVT,100 );
+	}
+/*PID控制#############################################################################*/
+	
 
 	if(Events& PID_CTRL_CMD_EVT)
 	{
-		t_motor = PIDRegulator(&mypid,20.00);
-		motor_ctrl(t_motor);
-		Start_timerEx( PID_CTRL_CMD_EVT,t_motor );
+//		PID_init(&mypid,30,1,PIDPara[0]); //优化的话只用传设定流量即可
+//		//PIDRegulator(&mypid,20.00);
+//		PIDRegulator(&mypid,PID_ControlValue[0]);
+
+		if(i_test==20)
+		{
+			i_test=0;
+		}
+		
+		PIDTest(setpoint,pv[i_test++]); 
+		
+		Start_timerEx(PID_CTRL_CMD_EVT,1000);  //自循环1s一次
 	}
-	/*PID控制######################################*/
+	
+	if(Events& MOTOR_CTR_EVT)
+	{
+//		motorflg = 0;
+		Stop_timerEx( MOTOR_CTR_EVT );
+	}
+	if(Events& MOTOR_ON_EVT)
+	{	
+		if(motorflg == 0)
+		{
+			
+		}
+		if(motorflg == 1) //正转
+		{
+			ROLLER1_UP;
+		}
+		if(motorflg == 2) //反转
+		{
+			ROLLER1_DOWN;
+		}
+		
+		Start_timerEx( MOTOR_STOP_EVT,t_on);
+	}
+	if(Events& MOTOR_STOP_EVT)
+	{
+		
+		ROLLER1_STOP;
+		ROLLER2_STOP;
+		Start_timerEx( MOTOR_ON_EVT,t_off);
+	}
+	
+	/*PID控制#############################################################################*/
 	if(Events&SENSOR_DATA_EVT)
 	{
 		evt_sensor_data=0;
@@ -452,6 +510,35 @@ static void RxReport2(u8 len,u8 *pBuf)
 			}
 		}
 	 }
+	/*PID#######################################################*/
+	if(pBuf[0]==0x42) //水肥pid
+	{
+		
+	  if(GetCRC16(pBuf,len)==0)
+		{  
+			u16 address,CRCReport2;
+							
+//			RS485LedToggle;										//有线通信灯翻转
+			
+			if(pBuf[1]==0x06)
+			{				
+				if(pBuf[2]==0x00&&pBuf[3]<=0x02) //pBuf[6]==0x08 ；接收控制命令      
+				{	
+					PID_ControlValue[pBuf[3]]=(pBuf[4]|(((u16)pBuf[5])<<8));		//取出命令指令	,3路频率          					
+			  }
+			if(pBuf[2]==0x00&&pBuf[3]>0x02&&pBuf[3]<=0x0C)      
+				{	
+					PIDPara[pBuf[3]-3]=(pBuf[4]|(((u16)pBuf[5])<<8));		//取出命令指令	,3路设定流量值以及PID运算系数          					
+			  }
+				
+				memcpy(ReportData2,pBuf,8);//返回命令=下发命令，8个字节完全相同			  	    
+		    WriteDataToBuffer(2,ReportData2,0,8);
+				return;  
+			}
+			
+	  }		 
+	}
+/*PID#######################################################*/
 }		
 	
 

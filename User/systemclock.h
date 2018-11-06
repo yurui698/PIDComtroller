@@ -9,7 +9,7 @@
 #define RX2_TIMEOUT_EVT      0x00000004
 #define MY_SNDBOTM_EVT	    0x00000008
 #define IO_CTRL_CMD_EVT    0x00000010
-#define PID_CTRL_CMD_EVT    0x00000012
+#define PID_CTRL_CMD_EVT    0x00002000
 #define MY_REVISION2_EVT    0x00000020
 #define TX3_DELAY_EVT       0x00000040
 #define FLASH_CTRL_EVT      0x00000080
@@ -20,6 +20,9 @@
 #define WX_CMD_EVT			0x00001000
 #define WX_RECEIVE_EVT			0x00004000
 #define CHECK_EACHEVT_EVT   0x00008000
+#define MOTOR_ON_EVT      0x00010000
+#define MOTOR_STOP_EVT     0x00020000
+#define MOTOR_CTR_EVT     0x00040000
 
 typedef struct timer_recall
 {	
